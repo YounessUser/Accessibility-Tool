@@ -52,9 +52,31 @@
         </script>
     <script>
         $(document).ready(function () {
+
+
+            function addViolations(violations, index) {
+                let violationsHTML = '';
+                const violationsParse = JSON.parse(violations);
+                console.log("addViolations: ", violationsParse);
+                for (let key in violationsParse) {
+                    console.log("violationsParse: ", violationsParse[key]);
+
+
+                    violationsHTML += `
+                            <div class="flex flex-col pb-3">
+                                <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">` + violationsParse[key].target.join(', ') + `</dt>
+                                <dd class="text-lg font-semibold">` + violationsParse[key].failureSummary + `</dd>
+                            </div>
+                        `;
+                }
+                return violationsHTML;
+            }
+
+
             /* LOAD pages accessibility result */
             $.get("/all", {}, function (data) {
                 if (data) {
+                    let index = 0;
                     for (let i = 0; i < data.length; i++) {
                         let desktopScoreColor = (data[i].lhDesktopScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
                         let mobileScoreColor = (data[i].lhMobileScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
@@ -68,13 +90,37 @@
                                     <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-10 m-auto">
                                     ` + data[i].lhDesktopScore + `
                                     </span>
-                                    </div>
+                                    <section class="grid place-items-center py-2 px-0">
+  
+                                        <label>
+                                            <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                            <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                    ` + addViolations(data[i].lhDesktopViolations) + `
+                                                </dl>
+                                            </span>
+                                        </label>
+                                    </section>
+                                </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col justify-center">
                                     <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-10 m-auto">
                                     ` + data[i].lhMobileScore + `
                                     </span>
+                                     <section class="grid place-items-center py-2 px-0">
+  
+                                        <label>
+                                            <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                            <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                    ` + addViolations(data[i].lhMobileViolations) + `
+                                                </dl>
+                                            </span>
+                                        </label>
+                                    </section>
                                     </div>
                                 </td>
                             </tr>`;
@@ -82,7 +128,6 @@
                     }
                 }
             });
-
 
             $("#lighthouse").click(function () {
                 const urls = $("#urls").val().split(',');
@@ -94,6 +139,7 @@
                     },
                     function (data) {
                         console.log(data);
+                        let index = 0;
                         for (let i = 0; i < urls.length; i++) {
                             let url = urls[i].trim();
                             let desktopScoreColor = data['desktop'][url]['score'] >= 90 ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
@@ -116,6 +162,18 @@
                                          <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-10 m-auto">
                                         ` + data['desktop'][url]['score'] + `
                                         </span>
+                                        <section class="grid place-items-center py-2 px-0">
+  
+                                        <label>
+                                            <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                            <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                    ` + addViolations(data[i].lhDesktopViolations) + `
+                                                </dl>
+                                            </span>
+                                        </label>
+                                    </section>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
@@ -123,12 +181,24 @@
                                          <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-10 m-auto">
                                         ` + data['mobile'][url]['score'] + `
                                         </span>
+                                        <section class="grid place-items-center py-2 px-0">
+  
+                                        <label>
+                                            <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                            <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                    ` + addViolations(data[i].lhMobileViolations) + `
+                                                </dl>
+                                            </span>
+                                        </label>
+                                    </section>
                                         </div>
                                     </td>
                                 </tr>`;
                                 $("#result table tbody").append(dynamicRowHTML);
                             }
-                            
+
 
                         }
 
