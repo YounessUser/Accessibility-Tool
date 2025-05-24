@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+</head>
+
+<body>
+  <div class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Accessibility Tool</h2>
+    <textarea id="urls"
+      class="w-full h-32 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder="URLS (separated by comma):">https://developer.chrome.com/docs/lighthouse,https://ai.google.dev/gemini-api/docs/pricing</textarea>
+    <div class="flex justify-between mt-4">
+      <button id="lighthouse" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        Lighthouse
+      </button>
+      <button id="wave" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">
+        Wave
+      </button>
+    </div>
+  </div>
+
+  <div id="result" class="relative overflow-x-auto">
+
+
+    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          <th></th>
+          <th scope="col" class="px-6 py-3">
+            Desktop
+          </th>
+          <th scope="col" class="px-6 py-3">
+            Mobile
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+       
+      </tbody>
+    </table>
+
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+    </script>
+  <script>
+    $(document).ready(function () {
+      $("#lighthouse").click(function () {
+        const urls = $("#urls").val().split(',');
+        const result = $("#result table");
+
+        $.post("/lighthouse",
+          {
+            urls: urls
+          },
+          function (data) {
+            console.log(data);
+            for (let i = 0; i < urls.length; i++) {
+              let url = urls[i];
+              let dynamicRowHTML = `
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                  <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                    ` + url + `
+                  </th>
+                  <td class="px-6 py-4">
+                    ` + data['desktop'][url] + `
+                  </td>
+                  <td class="px-6 py-4">
+                    ` + data['mobile'][url] + `
+                  </td>
+                </tr>`;
+              $("#result table tbody").append(dynamicRowHTML);
+
+            }
+
+          });
+      });
+    });
+  </script>
+
+</body>
+
+</html>
