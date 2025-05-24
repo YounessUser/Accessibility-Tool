@@ -2,87 +2,140 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Accessibility Tool</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
 </head>
 
-<body>
-  <div class="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Accessibility Tool</h2>
-    <textarea id="urls"
-      class="w-full h-32 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-      placeholder="URLS (separated by comma):">https://developer.chrome.com/docs/lighthouse,https://ai.google.dev/gemini-api/docs/pricing</textarea>
-    <div class="flex justify-between mt-4">
-      <button id="lighthouse" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-        Lighthouse
-      </button>
-      <button id="wave" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">
-        Wave
-      </button>
+<body class="dark:bg-gray-900">
+    <div class="max-w-lg mx-auto p-6 dark:bg-gray-900 rounded-lg shadow-md mt-5  border-white border-5">
+        <h2 class="text-2xl font-bold text-white mb-4">Accessibility Tool</h2>
+        <textarea id="urls"
+            class="w-full h-32 p-2 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            placeholder="URLS (separated by comma):">https://developer.chrome.com/docs/lighthouse,https://ai.google.dev/gemini-api/docs/pricing</textarea>
+        <div class="flex justify-between mt-4">
+            <button id="lighthouse" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-bold">
+                Lighthouse
+            </button>
+            <button id="wave" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-bold">
+                Wave
+            </button>
+        </div>
+
     </div>
-  </div>
-
-  <div id="result" class="relative overflow-x-auto">
+    <div id="result" class="relative overflow-x-auto max-w-8xl mx-auto p-6 ">
 
 
-    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-        <tr>
-          <th></th>
-          <th scope="col" class="px-6 py-3">
-            Desktop
-          </th>
-          <th scope="col" class="px-6 py-3">
-            Mobile
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-       
-      </tbody>
-    </table>
+        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">URLs</th>
+                    <th scope="col" class="px-6 py-3">
+                        Desktop
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Mobile
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
 
-  </div>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+            </tbody>
+        </table>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous">
+        </script>
+    <script>
+        $(document).ready(function () {
+            /* LOAD pages accessibility result */
+            $.get("/all", {}, function (data) {
+                if (data) {
+                    for (let i = 0; i < data.length; i++) {
+                        let desktopScoreColor = (data[i].lhDesktopScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
+                        let mobileScoreColor = (data[i].lhMobileScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
+                        let tableRow = `
+                            <tr data-url="` + data[i].url + `" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    ` + data[i].url + `
+                                </th>
+                                <td class="px-6 py-4">
+                                <div class="flex flex-col justify-center">
+                                    <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-10 m-auto">
+                                    ` + data[i].lhDesktopScore + `
+                                    </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col justify-center">
+                                    <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-10 m-auto">
+                                    ` + data[i].lhMobileScore + `
+                                    </span>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        $("#result table tbody").append(tableRow);
+                    }
+                }
+            });
+
+
+            $("#lighthouse").click(function () {
+                const urls = $("#urls").val().split(',');
+                const result = $("#result table");
+
+                $.post("/lighthouse",
+                    {
+                        urls: urls
+                    },
+                    function (data) {
+                        console.log(data);
+                        for (let i = 0; i < urls.length; i++) {
+                            let url = urls[i].trim();
+                            let desktopScoreColor = data['desktop'][url]['score'] >= 90 ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
+                            let mobileScoreColor = data['desktop'][url]['score'] >= 90 ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
+                            if ($("#result table tbody tr[data-url='" + url + "']").length > 0) {
+                                // If the row already exists, update it
+                                $("#result table tbody tr[data-url='" + url + "'] .desktop-score").text(data['desktop'][url]['score']);
+                                $("#result table tbody tr[data-url='" + url + "'] .mobile-score").text(data['mobile'][url]['score']);
+                                $("#result table tbody tr[data-url='" + url + "'] .desktop-score").removeClass().addClass('inline-block rounded-full border-5 ' + desktopScoreColor + ' text-xl p-10 m-auto');
+                                $("#result table tbody tr[data-url='" + url + "'] .mobile-score").removeClass().addClass('inline-block rounded-full border-5 ' + mobileScoreColor + ' text-xl p-10 m-auto');
+                            } else {
+                                // If the row does not exist, create a new one
+                                let dynamicRowHTML = `
+                                    <tr data-url="` + url + `" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        ` + url + `
+                                    </th>
+                                    <td class="px-6 py-4">
+                                       <div class="flex flex-col justify-center">
+                                         <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-10 m-auto">
+                                        ` + data['desktop'][url]['score'] + `
+                                        </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col justify-center">
+                                         <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-10 m-auto">
+                                        ` + data['mobile'][url]['score'] + `
+                                        </span>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                                $("#result table tbody").append(dynamicRowHTML);
+                            }
+                            
+
+                        }
+
+                    });
+            });
+        });
     </script>
-  <script>
-    $(document).ready(function () {
-      $("#lighthouse").click(function () {
-        const urls = $("#urls").val().split(',');
-        const result = $("#result table");
-
-        $.post("/lighthouse",
-          {
-            urls: urls
-          },
-          function (data) {
-            console.log(data);
-            for (let i = 0; i < urls.length; i++) {
-              let url = urls[i];
-              let dynamicRowHTML = `
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
-                  <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    ` + url + `
-                  </th>
-                  <td class="px-6 py-4">
-                    ` + data['desktop'][url] + `
-                  </td>
-                  <td class="px-6 py-4">
-                    ` + data['mobile'][url] + `
-                  </td>
-                </tr>`;
-              $("#result table tbody").append(dynamicRowHTML);
-
-            }
-
-          });
-      });
-    });
-  </script>
 
 </body>
 
