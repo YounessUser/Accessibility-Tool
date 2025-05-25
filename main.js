@@ -32,7 +32,9 @@ db.run(`CREATE TABLE IF NOT EXISTS accessibilities (
     lhDesktopScore TEXT,
     lhMobileScore TEXT,
     lhDesktopViolations TEXT,
-    lhMobileViolations TEXT
+    lhMobileViolations TEXT,
+    waveDesktopResults TEXT,
+    waveMobileResults TEXT
 )`, (err) => {
   if (err) {
     console.error(err.message);

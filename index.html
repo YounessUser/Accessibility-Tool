@@ -6,10 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accessibility Tool</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
+    <style>
+        .loader {
+        width: 50px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: 8px solid lightblue;
+        border-right-color: orange;
+        animation: l2 1s infinite linear;
+        }
+        @keyframes l2 {to{transform: rotate(1turn)}}
+    </style>
 </head>
 
 <body class="dark:bg-gray-900">
+    <div id="loader" class="hidden w-screen h-screen fixed z-9999 opacity-75 bg-gray-900">
+         <div class="loader absolute top-[50%] left-[50%]"></div> 
+    </div>
     <div class="max-w-lg mx-auto p-6 dark:bg-gray-900 rounded-lg shadow-md mt-5  border-white border-5">
         <h2 class="text-2xl font-bold text-white mb-4">Accessibility Tool</h2>
         <textarea id="urls"
@@ -132,7 +145,7 @@
             $("#lighthouse").click(function () {
                 const urls = $("#urls").val().split(',');
                 const result = $("#result table");
-
+                $("#loader").removeClass("hidden");
                 $.post("/lighthouse",
                     {
                         urls: urls
@@ -169,7 +182,7 @@
                                             <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
                                                 <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
                                                 <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-                                                    ` + addViolations(data[i].lhDesktopViolations) + `
+                                                    ` + addViolations(data['desktop'][url]['violations']) + `
                                                 </dl>
                                             </span>
                                         </label>
@@ -188,7 +201,7 @@
                                             <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
                                                 <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
                                                 <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-                                                    ` + addViolations(data[i].lhMobileViolations) + `
+                                                    ` + addViolations(data['desktop'][url]['violations']) + `
                                                 </dl>
                                             </span>
                                         </label>
@@ -197,6 +210,8 @@
                                     </td>
                                 </tr>`;
                                 $("#result table tbody").append(dynamicRowHTML);
+
+                                $("#loader").addClass("hidden");
                             }
 
 
