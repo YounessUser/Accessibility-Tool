@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 import sqlite3 from 'sqlite3';
-import e from 'express';
+import axios from 'axios';
 
 const app = express()
 const port = 3000
@@ -59,22 +59,22 @@ app.get('/all', (req, res) => {
 function getViolations(violations) {
   console.log(violations);
   let violationsArray = {};
-    if (violations) {
-      let index = 0;
-      for (const violation of violations) {
-        if (violation.nodes && violation.nodes.length > 0) {
-          for (const node of violation.nodes) {
-            if (node.target && node.failureSummary) {
-              violationsArray[index++] = {
-                target: node.target,
-                failureSummary: node.failureSummary
-              };
-            }
+  if (violations) {
+    let index = 0;
+    for (const violation of violations) {
+      if (violation.nodes && violation.nodes.length > 0) {
+        for (const node of violation.nodes) {
+          if (node.target && node.failureSummary) {
+            violationsArray[index++] = {
+              target: node.target,
+              failureSummary: node.failureSummary
+            };
           }
         }
-        
       }
+
     }
+  }
   return violationsArray;
 }
 
@@ -117,12 +117,12 @@ app.post('/lighthouse', async (req, res) => {
 
   for (let i = 0; i < urls.length; i++) {
     let url = urls[i].trim();
-    
+
 
     for (const optionSet of lighthouseOptionsArray) {
       let device = optionSet.settings.emulatedFormFactor;
       let result = await lighthouse(url, options, optionSet);
-      runnerResult[device][url] = {score: 0, violations: {}};
+      runnerResult[device][url] = { score: 0, violations: {} };
       runnerResult[device][url]['score'] = result.lhr.categories.accessibility.score * 100;
       runnerResult[device][url]['violations'] = JSON.stringify(getViolations(result.artifacts.Accessibility.violations));
       console.log(runnerResult);
@@ -132,8 +132,8 @@ app.post('/lighthouse', async (req, res) => {
     if (existingAccessibility) {
       console.log("Updating existing record for URL:", url);
       db.run(
-        'UPDATE accessibilities SET lhDesktopScore = ?, lhMobileScore = ?, lhDesktopViolations = ?, lhMobileViolations = ? WHERE url = ?', 
-        [runnerResult["desktop"][url]['score'], runnerResult["mobile"][url]['score'], runnerResult["desktop"][url]['violations'], runnerResult["mobile"][url]['violations'], url], 
+        'UPDATE accessibilities SET lhDesktopScore = ?, lhMobileScore = ?, lhDesktopViolations = ?, lhMobileViolations = ? WHERE url = ?',
+        [runnerResult["desktop"][url]['score'], runnerResult["mobile"][url]['score'], runnerResult["desktop"][url]['violations'], runnerResult["mobile"][url]['violations'], url],
         function (err) {
           if (err) {
             console.error("Database Error: ", err);
@@ -141,15 +141,68 @@ app.post('/lighthouse', async (req, res) => {
         });
     } else {
       db.run(
-        'INSERT INTO accessibilities (url, lhDesktopScore, lhMobileScore, lhDesktopViolations, lhMobileViolations) VALUES (?, ?, ?, ?, ?)', 
-        [url, runnerResult["desktop"][url]['score'], runnerResult["mobile"][url]['score'], runnerResult["desktop"][url]['violations'], runnerResult["mobile"][url]['violations']], 
+        'INSERT INTO accessibilities (url, lhDesktopScore, lhMobileScore, lhDesktopViolations, lhMobileViolations) VALUES (?, ?, ?, ?, ?)',
+        [url, runnerResult["desktop"][url]['score'], runnerResult["mobile"][url]['score'], runnerResult["desktop"][url]['violations'], runnerResult["mobile"][url]['violations']],
         function (err) {
-        console.log("database Error ", err);
-      });
+          console.log("database Error ", err);
+        });
     }
   }
   res.json(runnerResult);
   chrome.kill();
+});
+
+app.post('/wave', async (req, res) => {
+  const urls = req.body.urls;
+  let runnerResult = { desktop: {}, mobile: {} };
+  const apiKey = 'eG4rseK15412';
+
+
+  for (let i = 0; i < urls.length; i++) {
+    let url = urls[i].trim();
+    runnerResult['desktop'][url] = {};
+    runnerResult['mobile'][url] = {};
+    try {
+      let apiDesktopUrl = `https://wave.webaim.org/api/request?key=${apiKey}&reporttype=4&url=${encodeURIComponent(url)}&viewportwidth=1440`;
+      let apiMobileUrl = `https://wave.webaim.org/api/request?key=${apiKey}&reporttype=4&url=${encodeURIComponent(url)}&viewportwidth=375`;
+
+
+      const mobileResult = await axios.get(apiMobileUrl);
+      const desktopResult = await axios.get(apiDesktopUrl);
+
+      console.log("Wave API Response: ", desktopResult.data, mobileResult.data);
+      runnerResult['desktop'][url]['results'] = desktopResult.data;
+      runnerResult['mobile'][url]['results'] = mobileResult.data;
+
+      const existingAccessibility = await getAccessibilityByUrl(url);
+      if (existingAccessibility) {
+        db.run(
+          'UPDATE accessibilities SET waveDesktopResults = ?, waveMobileResults = ? WHERE url = ?',
+          [JSON.stringify(desktopResult.data), JSON.stringify(mobileResult.data), url],
+          function (err) {
+            if (err) {
+              console.error("Database Error: ", err);
+            }
+          });
+      } else {
+        db.run(
+          'INSERT INTO accessibilities (url, waveDesktopResults, waveMobileResults) VALUES (?, ?, ?)',
+          [url, JSON.stringify(desktopResult.data), JSON.stringify(mobileResult.data)],
+          function (err) {
+            if (err) {
+              console.error("Database Error: ", err);
+            }
+          });
+      }
+
+    } catch (error) {
+      console.error("Error fetching Wave API data: ", error);
+      return res.status(500).json({ error: 'Failed to fetch Wave API data' });
+    }
+
+  }
+
+  res.json(runnerResult);
 });
 
 

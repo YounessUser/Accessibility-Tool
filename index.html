@@ -219,6 +219,31 @@
 
                     });
             });
+        
+            $("#wave").click(function () {
+                const urls = $("#urls").val().split(',');
+                const result = $("#result table");
+                $("#loader").removeClass("hidden");
+                $.post("/wave",
+                    {
+                        urls: urls
+                    },
+                    function (data) {
+                        console.log(data);
+                        // let index = 0;
+                        // for (let i = 0; i < urls.length; i++) {
+                        //     let url = urls[i].trim();
+                        //     if ($("#result table tbody tr[data-url='" + url + "']").length > 0) {
+                        //         // If the row already exists, update it
+                        //         $("#result table tbody tr[data-url='" + url + "'] .wave-score").text(data[url]['score']);
+                        //     } else {
+                        //         // If the row does not exist, create a new one
+                        //         let dynamicRowHTML = ``
+                        //     }
+                        // }
+                    }
+                )
+            });
         });
     </script>
 
