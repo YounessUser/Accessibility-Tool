@@ -122,10 +122,11 @@ app.post('/lighthouse', async (req, res) => {
     for (const optionSet of lighthouseOptionsArray) {
       let device = optionSet.settings.emulatedFormFactor;
       let result = await lighthouse(url, options, optionSet);
+      console.log(result)
       runnerResult[device][url] = { score: 0, violations: {} };
       runnerResult[device][url]['score'] = result.lhr.categories.accessibility.score * 100;
       runnerResult[device][url]['violations'] = JSON.stringify(getViolations(result.artifacts.Accessibility.violations));
-      console.log(runnerResult);
+
     }
     const existingAccessibility = await getAccessibilityByUrl(url);
     console.log("Existing Accessibility Record: ", existingAccessibility);
@@ -171,8 +172,8 @@ app.post('/wave', async (req, res) => {
       const desktopResult = await axios.get(apiDesktopUrl);
 
       console.log("Wave API Response: ", desktopResult.data, mobileResult.data);
-      runnerResult['desktop'][url]['results'] = desktopResult.data;
-      runnerResult['mobile'][url]['results'] = mobileResult.data;
+      runnerResult['desktop'][url]['results'] = JSON.stringify(desktopResult.data);
+      runnerResult['mobile'][url]['results'] = JSON.stringify(mobileResult.data);
 
       const existingAccessibility = await getAccessibilityByUrl(url);
       if (existingAccessibility) {

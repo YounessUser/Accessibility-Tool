@@ -27,12 +27,12 @@
         <h2 class="text-2xl font-bold text-white mb-4">Accessibility Tool</h2>
         <textarea id="urls"
             class="w-full h-32 p-2 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-            placeholder="URLS (separated by comma):">https://developer.chrome.com/docs/lighthouse,https://ai.google.dev/gemini-api/docs/pricing</textarea>
+            placeholder="URLS (separated by comma):"></textarea>
         <div class="flex justify-between mt-4">
-            <button id="lighthouse" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-bold">
+            <button id="lighthouse" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-bold">
                 Lighthouse
             </button>
-            <button id="wave" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 font-bold">
+            <button id="wave" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-bold">
                 Wave
             </button>
         </div>
@@ -41,7 +41,17 @@
     <div id="result" class="relative overflow-x-auto max-w-8xl mx-auto p-6 ">
 
 
-        <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+
+        <ul class="hidden text-sm font-medium text-center text-gray-500 rounded-lg shadow-sm sm:flex dark:divide-gray-700 dark:text-gray-400 mb-5">
+            <li class="w-full focus-within:z-10">
+                <a id="display_lighthouse" href="#lighthouse" class="inline-block w-full p-4 text-gray-900 bg-gray-100 border-r border-gray-200 dark:border-gray-700 rounded-s-lg focus:ring-4 focus:ring-blue-300 active focus:outline-none dark:bg-gray-700 dark:text-white" aria-current="page">Lighthouse</a>
+            </li>
+            <li class="w-full focus-within:z-10">
+                <a id="display_wave" href="#wave" class="inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">Wave</a>
+            </li>
+        </ul>
+
+        <table id="lighthouse_table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                     <th scope="col" class="px-6 py-3">URLs</th>
@@ -58,6 +68,23 @@
             </tbody>
         </table>
 
+        <table id="wave_table" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 hidden">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">URLs</th>
+                <th scope="col" class="px-6 py-3">
+                    Desktop
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Mobile
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
@@ -66,6 +93,18 @@
     <script>
         $(document).ready(function () {
 
+            $("#display_lighthouse").click(function() {
+                $("#lighthouse_table").removeClass("hidden");
+                $("#wave_table").addClass("hidden");
+                $("#display_lighthouse").removeAttr("class").addClass("inline-block w-full p-4 text-gray-900 bg-gray-100 border-r border-gray-200 dark:border-gray-700 rounded-s-lg focus:ring-4 focus:ring-blue-300 active focus:outline-none dark:bg-gray-700 dark:text-white");
+                $("#display_wave").removeAttr("class").addClass("inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700");
+            });
+            $("#display_wave").click(function() {
+                $("#wave_table").removeClass("hidden");
+                $("#lighthouse_table").addClass("hidden");
+                $("#display_wave").removeAttr("class").addClass("inline-block w-full p-4 text-gray-900 bg-gray-100 border-r border-gray-200 dark:border-gray-700 rounded-s-lg focus:ring-4 focus:ring-blue-300 active focus:outline-none dark:bg-gray-700 dark:text-white");
+                $("#display_lighthouse").removeAttr("class").addClass("inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700");
+            });
 
             function addViolations(violations, index) {
                 let violationsHTML = '';
@@ -89,10 +128,11 @@
             /* LOAD pages accessibility result */
             $.get("/all", {}, function (data) {
                 if (data) {
-                    let index = 0;
                     for (let i = 0; i < data.length; i++) {
+                        if (data[i].lhDesktopScore && data[i].lhMobileScore) {
                         let desktopScoreColor = (data[i].lhDesktopScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
                         let mobileScoreColor = (data[i].lhMobileScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
+                        console.log(data[i].lhDesktopViolations);``
                         let tableRow = `
                             <tr data-url="` + data[i].url + `" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -100,15 +140,15 @@
                                 </th>
                                 <td class="px-6 py-4">
                                 <div class="flex flex-col justify-center">
-                                    <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-10 m-auto">
+                                    <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-8 m-auto">
                                     ` + data[i].lhDesktopScore + `
                                     </span>
-                                    <section class="grid place-items-center py-2 px-0">
+                                    <section class="grid place-items-center py-2 px-0 ` + (data[i].lhDesktopViolations === '{}' ? 'hidden' : '' ) + `">
   
                                         <label>
                                             <input class="peer/showLabel absolute scale-0" type="checkbox" />
                                             <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
-                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
                                                 <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
                                                     ` + addViolations(data[i].lhDesktopViolations) + `
                                                 </dl>
@@ -119,15 +159,15 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col justify-center">
-                                    <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-10 m-auto">
+                                    <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-8 m-auto">
                                     ` + data[i].lhMobileScore + `
                                     </span>
-                                     <section class="grid place-items-center py-2 px-0">
+                                     <section class="grid place-items-center py-2 px-0 ` + (data[i].lhMobileViolations === '{}' ? 'hidden' : '' ) + `">
   
                                         <label>
                                             <input class="peer/showLabel absolute scale-0" type="checkbox" />
                                             <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
-                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
                                                 <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
                                                     ` + addViolations(data[i].lhMobileViolations) + `
                                                 </dl>
@@ -137,14 +177,87 @@
                                     </div>
                                 </td>
                             </tr>`;
-                        $("#result table tbody").append(tableRow);
+                        $("#result table#lighthouse_table tbody").append(tableRow);
+                        }
+
+                        if(data[i].waveDesktopResults && data[i].waveMobileResults) {
+                        const waveDesktopData = JSON.parse(data[i].waveDesktopResults);
+                        const waveMobileData = JSON.parse(data[i].waveMobileResults);
+
+                        let waveTableRow = `
+                                    <tr data-url="` + data[i].url + `" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        ` + data[i].url + `
+                                    </th>
+                                    <td class="px-6 py-4">
+                                       <div class="flex flex-col justify-center">
+
+                                        <section class="grid place-items-center py-2 px-0 ">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Error (` + waveDesktopData.categories.error.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                        ` + addWaveViolations(waveDesktopData.categories.error.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                         <section class="grid place-items-center py-2 px-0 \` + (data['desktop'][url]['violations'] === '{}' ? 'hidden' : '' ) + \`">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Contrast (` + waveDesktopData.categories.contrast.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                         ` + addWaveViolations(waveDesktopData.categories.contrast.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col justify-center">
+
+                                         <section class="grid place-items-center py-2 px-0 ">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Error (` + waveMobileData.categories.error.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                        ` + addWaveViolations(waveMobileData.categories.error.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                         <section class="grid place-items-center py-2 px-0 \` + (data['desktop'][url]['violations'] === '{}' ? 'hidden' : '' ) + \`">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Contrast (` + waveMobileData.categories.contrast.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                         ` + addWaveViolations(waveMobileData.categories.contrast.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                        $("#result table#wave_table tbody").append(waveTableRow);
+                        }
                     }
                 }
+                $("#loader").addClass("hidden");
+
             });
 
             $("#lighthouse").click(function () {
                 const urls = $("#urls").val().split(',');
-                const result = $("#result table");
                 $("#loader").removeClass("hidden");
                 $.post("/lighthouse",
                     {
@@ -152,17 +265,16 @@
                     },
                     function (data) {
                         console.log(data);
-                        let index = 0;
                         for (let i = 0; i < urls.length; i++) {
                             let url = urls[i].trim();
                             let desktopScoreColor = data['desktop'][url]['score'] >= 90 ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
                             let mobileScoreColor = data['desktop'][url]['score'] >= 90 ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
-                            if ($("#result table tbody tr[data-url='" + url + "']").length > 0) {
+                            if ($("#result table#lighthouse_table tbody tr[data-url='" + url + "']").length > 0) {
                                 // If the row already exists, update it
                                 $("#result table tbody tr[data-url='" + url + "'] .desktop-score").text(data['desktop'][url]['score']);
                                 $("#result table tbody tr[data-url='" + url + "'] .mobile-score").text(data['mobile'][url]['score']);
-                                $("#result table tbody tr[data-url='" + url + "'] .desktop-score").removeClass().addClass('inline-block rounded-full border-5 ' + desktopScoreColor + ' text-xl p-10 m-auto');
-                                $("#result table tbody tr[data-url='" + url + "'] .mobile-score").removeClass().addClass('inline-block rounded-full border-5 ' + mobileScoreColor + ' text-xl p-10 m-auto');
+                                $("#result table tbody tr[data-url='" + url + "'] .desktop-score").removeClass().addClass('inline-block rounded-full border-5 ' + desktopScoreColor + ' text-xl p-8 m-auto');
+                                $("#result table tbody tr[data-url='" + url + "'] .mobile-score").removeClass().addClass('inline-block rounded-full border-5 ' + mobileScoreColor + ' text-xl p-8 m-auto');
                             } else {
                                 // If the row does not exist, create a new one
                                 let dynamicRowHTML = `
@@ -172,15 +284,15 @@
                                     </th>
                                     <td class="px-6 py-4">
                                        <div class="flex flex-col justify-center">
-                                         <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-10 m-auto">
+                                         <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-8 m-auto">
                                         ` + data['desktop'][url]['score'] + `
                                         </span>
-                                        <section class="grid place-items-center py-2 px-0">
+                                        <section class="grid place-items-center py-2 px-0 ` + (data['desktop'][url]['violations'] === '{}' ? 'hidden' : '' ) + `">
   
                                         <label>
                                             <input class="peer/showLabel absolute scale-0" type="checkbox" />
                                             <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
-                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
                                                 <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
                                                     ` + addViolations(data['desktop'][url]['violations']) + `
                                                 </dl>
@@ -191,17 +303,17 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-col justify-center">
-                                         <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-10 m-auto">
+                                         <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-8 m-auto">
                                         ` + data['mobile'][url]['score'] + `
                                         </span>
-                                        <section class="grid place-items-center py-2 px-0">
+                                        <section class="grid place-items-center py-2 px-0 ` + (data['mobile'][url]['violations'] === '{}' ? 'hidden' : '' ) + `">
   
                                         <label>
                                             <input class="peer/showLabel absolute scale-0" type="checkbox" />
                                             <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
-                                                <h3 class="flex h-14 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
+                                                <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">See more details</h3>
                                                 <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
-                                                    ` + addViolations(data['desktop'][url]['violations']) + `
+                                                    ` + addViolations(data['mobile'][url]['violations']) + `
                                                 </dl>
                                             </span>
                                         </label>
@@ -209,20 +321,32 @@
                                         </div>
                                     </td>
                                 </tr>`;
-                                $("#result table tbody").append(dynamicRowHTML);
-
-                                $("#loader").addClass("hidden");
+                                $("#result table#lighthouse_table tbody").append(dynamicRowHTML);
                             }
-
-
                         }
-
+                        $("#loader").addClass("hidden");
                     });
             });
-        
+
+
+            function addWaveViolations(violations) {
+                let violationsHTML = '';
+                console.log(violations)
+                for (let key in violations) {
+                    const violation = violations[key];
+                    violationsHTML += `
+                            <div class="flex flex-col pb-3">
+                                <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">` + violation.description + ` (` + violation.count + `) </dt>
+                                <dd class="text-lg font-semibold"><ul> <li style="border-bottom: 2px solid #fff;">` + violation.selectors.join('/n</li><li style="border-bottom: 2px solid #fff;">') + `</li></ul></dd>
+                            </div>
+                        `;
+                }
+                return violationsHTML;
+            }
+
+
             $("#wave").click(function () {
                 const urls = $("#urls").val().split(',');
-                const result = $("#result table");
                 $("#loader").removeClass("hidden");
                 $.post("/wave",
                     {
@@ -230,17 +354,82 @@
                     },
                     function (data) {
                         console.log(data);
-                        // let index = 0;
-                        // for (let i = 0; i < urls.length; i++) {
-                        //     let url = urls[i].trim();
-                        //     if ($("#result table tbody tr[data-url='" + url + "']").length > 0) {
-                        //         // If the row already exists, update it
-                        //         $("#result table tbody tr[data-url='" + url + "'] .wave-score").text(data[url]['score']);
-                        //     } else {
-                        //         // If the row does not exist, create a new one
-                        //         let dynamicRowHTML = ``
-                        //     }
-                        // }
+                        for (let i = 0; i < urls.length; i++) {
+                            let url = urls[i].trim();
+                            let desktopRaport = JSON.parse(data['desktop'][url]['results']);
+                            let mobileRaport = JSON.parse(data['mobile'][url]['results']);
+                            if ($("#result table#wave_table tbody tr[data-url='" + url + "']").length > 0) {
+
+                            } else {
+                                // If the row does not exist, create a new one
+                                let dynamicRowHTML = `
+                                    <tr data-url="` + url + `" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
+                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        ` + url + `
+                                    </th>
+                                    <td class="px-6 py-4">
+                                       <div class="flex flex-col justify-center">
+
+                                        <section class="grid place-items-center py-2 px-0 ">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Error (` + desktopRaport.categories.error.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                        ` + addWaveViolations(desktopRaport.categories.error.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                         <section class="grid place-items-center py-2 px-0 \` + (data['desktop'][url]['violations'] === '{}' ? 'hidden' : '' ) + \`">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Contrast (` + desktopRaport.categories.contrast.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                         ` + addWaveViolations(desktopRaport.categories.contrast.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col justify-center">
+
+                                         <section class="grid place-items-center py-2 px-0 ">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Error (` + mobileRaport.categories.error.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                        ` + addWaveViolations(mobileRaport.categories.error.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                         <section class="grid place-items-center py-2 px-0 \` + (data['desktop'][url]['violations'] === '{}' ? 'hidden' : '' ) + \`">
+
+                                            <label>
+                                                <input class="peer/showLabel absolute scale-0" type="checkbox" />
+                                                <span class="block max-h-14 max-w-xs overflow-auto rounded-lg  px-4 py-0 shadow-lg transition-all duration-300 peer-checked/showLabel:max-h-[450px]">
+                                                    <h3 class="flex h-14 px-6 cursor-pointer items-center font-bold bg-gray-700  text-white justify-center">Contrast (` + mobileRaport.categories.contrast.count + `)</h3>
+                                                    <dl class="max-w-md text-gray-900 divide-y divide-gray-200 dark:text-white dark:divide-gray-700">
+                                                         ` + addWaveViolations(mobileRaport.categories.contrast.items) + `
+                                                    </dl>
+                                                </span>
+                                            </label>
+                                        </section>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                                $("#result table#wave_table tbody").append(dynamicRowHTML);
+                            }
+                        }
+                        $("#loader").addClass("hidden");
                     }
                 )
             });
