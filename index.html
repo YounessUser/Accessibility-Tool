@@ -25,6 +25,16 @@
     </div>
     <div class="max-w-lg mx-auto p-6 dark:bg-gray-900 rounded-lg shadow-md mt-5  border-white border-5">
         <h2 class="text-2xl font-bold text-white mb-4">Accessibility Tool</h2>
+
+        <div class="max-w-md mx-auto py-4">
+            <label for="sitemap-url" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
+            <div class="relative">
+
+                <input type="search" id="sitemap-url" class="block w-full p-4 ps-4 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Sitemap URL" required />
+                <button type="button" id="sitemap-btn" class="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">LOAD</button>
+            </div>
+        </div>
+
         <textarea id="urls"
             class="w-full h-32 p-2 border border-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
             placeholder="URLS (separated by comma):"></textarea>
@@ -47,7 +57,7 @@
                 <a id="display_lighthouse" href="#lighthouse" class="inline-block w-full p-4 text-gray-900 bg-gray-100 border-r border-gray-200 dark:border-gray-700 rounded-s-lg focus:ring-4 focus:ring-blue-300 active focus:outline-none dark:bg-gray-700 dark:text-white" aria-current="page">Lighthouse</a>
             </li>
             <li class="w-full focus-within:z-10">
-                <a id="display_wave" href="#wave" class="inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">Wave</a>
+                <a id="display_wave" href="#wave" class="inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-600">Wave</a>
             </li>
         </ul>
 
@@ -93,27 +103,31 @@
     <script>
         $(document).ready(function () {
 
+            $("#sitemap-btn").click(async function(){
+                console.log($("#sitemap-url").val().trim());
+                $.get("/sitemap", {sitemapUrl: $("#sitemap-url").val().trim()}, function (data) {
+                    $("#urls").val(data.stemapUrls.join(','));
+                });
+            });
+
+
             $("#display_lighthouse").click(function() {
                 $("#lighthouse_table").removeClass("hidden");
                 $("#wave_table").addClass("hidden");
                 $("#display_lighthouse").removeAttr("class").addClass("inline-block w-full p-4 text-gray-900 bg-gray-100 border-r border-gray-200 dark:border-gray-700 rounded-s-lg focus:ring-4 focus:ring-blue-300 active focus:outline-none dark:bg-gray-700 dark:text-white");
-                $("#display_wave").removeAttr("class").addClass("inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700");
+                $("#display_wave").removeAttr("class").addClass("inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-600");
             });
             $("#display_wave").click(function() {
                 $("#wave_table").removeClass("hidden");
                 $("#lighthouse_table").addClass("hidden");
                 $("#display_wave").removeAttr("class").addClass("inline-block w-full p-4 text-gray-900 bg-gray-100 border-r border-gray-200 dark:border-gray-700 rounded-s-lg focus:ring-4 focus:ring-blue-300 active focus:outline-none dark:bg-gray-700 dark:text-white");
-                $("#display_lighthouse").removeAttr("class").addClass("inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700");
+                $("#display_lighthouse").removeAttr("class").addClass("inline-block w-full p-4 bg-white border-r border-gray-200 dark:border-gray-700 hover:text-gray-700 hover:bg-gray-50 focus:ring-4 focus:ring-blue-300 focus:outline-none dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-600");
             });
 
             function addViolations(violations, index) {
                 let violationsHTML = '';
                 const violationsParse = JSON.parse(violations);
-                console.log("addViolations: ", violationsParse);
                 for (let key in violationsParse) {
-                    console.log("violationsParse: ", violationsParse[key]);
-
-
                     violationsHTML += `
                             <div class="flex flex-col pb-3">
                                 <dt class="mb-1 text-gray-500 md:text-lg dark:text-gray-400">` + violationsParse[key].target.join(', ') + `</dt>
@@ -132,7 +146,6 @@
                         if (data[i].lhDesktopScore && data[i].lhMobileScore) {
                         let desktopScoreColor = (data[i].lhDesktopScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
                         let mobileScoreColor = (data[i].lhMobileScore >= 90) ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';
-                        console.log(data[i].lhDesktopViolations);``
                         let tableRow = `
                             <tr data-url="` + data[i].url + `" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -264,7 +277,6 @@
                         urls: urls
                     },
                     function (data) {
-                        console.log(data);
                         for (let i = 0; i < urls.length; i++) {
                             let url = urls[i].trim();
                             let desktopScoreColor = data['desktop'][url]['score'] >= 90 ? 'border-green-400 text-green-400' : 'border-orange-400 text-orange-400';

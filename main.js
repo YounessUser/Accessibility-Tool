@@ -6,6 +6,7 @@ import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
 import sqlite3 from 'sqlite3';
 import axios from 'axios';
+import { DOMParser } from 'xmldom';
 
 const app = express()
 const port = 3000
@@ -41,11 +42,9 @@ db.run(`CREATE TABLE IF NOT EXISTS accessibilities (
   }
 });
 
-
 app.get('/', (req, res) => {
   res.sendFile('index.html', { root: __dirname });
 })
-
 
 app.get('/all', (req, res) => {
   db.all('SELECT * FROM accessibilities', [], (err, rows) => {
@@ -77,8 +76,6 @@ function getViolations(violations) {
   }
   return violationsArray;
 }
-
-
 function getAccessibilityByUrl(url) {
   return new Promise((resolve, reject) => {
     db.get('SELECT * FROM accessibilities WHERE url = ?', [url], (err, row) => {
@@ -91,7 +88,8 @@ function getAccessibilityByUrl(url) {
   });
 }
 app.post('/lighthouse', async (req, res) => {
-  const chrome = await chromeLauncher.launch({ chromeFlags: ["--no-sandbox", "--headless"] });
+  console.time("add");
+  const chrome = await chromeLauncher.launch({ chromeFlags: ["--no-sandbox", "--headless", "--quiet"] });
   const options = { logLevel: 'info', enableErrorReporting: true, output: 'json', onlyCategories: ['accessibility'], port: chrome.port };
   const lighthouseOptionsArray = [
     {
@@ -122,7 +120,6 @@ app.post('/lighthouse', async (req, res) => {
     for (const optionSet of lighthouseOptionsArray) {
       let device = optionSet.settings.emulatedFormFactor;
       let result = await lighthouse(url, options, optionSet);
-      console.log(result)
       runnerResult[device][url] = { score: 0, violations: {} };
       runnerResult[device][url]['score'] = result.lhr.categories.accessibility.score * 100;
       runnerResult[device][url]['violations'] = (result.artifacts && result.artifacts.Accessibility && result.artifacts.Accessibility.violations) ?
@@ -131,9 +128,7 @@ app.post('/lighthouse', async (req, res) => {
 
     }
     const existingAccessibility = await getAccessibilityByUrl(url);
-    console.log("Existing Accessibility Record: ", existingAccessibility);
     if (existingAccessibility) {
-      console.log("Updating existing record for URL:", url);
       db.run(
         'UPDATE accessibilities SET lhDesktopScore = ?, lhMobileScore = ?, lhDesktopViolations = ?, lhMobileViolations = ? WHERE url = ?',
         [runnerResult["desktop"][url]['score'], runnerResult["mobile"][url]['score'], runnerResult["desktop"][url]['violations'], runnerResult["mobile"][url]['violations'], url],
@@ -153,6 +148,7 @@ app.post('/lighthouse', async (req, res) => {
   }
   res.json(runnerResult);
   chrome.kill();
+  console.timeEnd("add");
 });
 
 app.post('/wave', async (req, res) => {
@@ -173,7 +169,6 @@ app.post('/wave', async (req, res) => {
       const mobileResult = await axios.get(apiMobileUrl);
       const desktopResult = await axios.get(apiDesktopUrl);
 
-      console.log("Wave API Response: ", desktopResult.data, mobileResult.data);
       runnerResult['desktop'][url]['results'] = JSON.stringify(desktopResult.data);
       runnerResult['mobile'][url]['results'] = JSON.stringify(mobileResult.data);
 
@@ -208,7 +203,25 @@ app.post('/wave', async (req, res) => {
   res.json(runnerResult);
 });
 
+app.get('/sitemap', async (req, res) => {
+  const stemapUrl = req.query.sitemapUrl;
+  let stemapUrls = [];
+  try {
+    const response = await fetch(stemapUrl);
+    const xmlString = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+    const locs = xmlDoc.getElementsByTagName('loc');
 
+    for (let i = 0; i < locs.length; i++) {
+      stemapUrls[i] = locs[i].childNodes[0].nodeValue;
+    }
+
+  } catch (error) {
+    console.error('Error loading XML:', error);
+  }
+  res.send({stemapUrls});
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
