@@ -125,7 +125,9 @@ app.post('/lighthouse', async (req, res) => {
       console.log(result)
       runnerResult[device][url] = { score: 0, violations: {} };
       runnerResult[device][url]['score'] = result.lhr.categories.accessibility.score * 100;
-      runnerResult[device][url]['violations'] = JSON.stringify(getViolations(result.artifacts.Accessibility.violations));
+      runnerResult[device][url]['violations'] = (result.artifacts && result.artifacts.Accessibility && result.artifacts.Accessibility.violations) ?
+                                                        JSON.stringify(getViolations(result.artifacts.Accessibility.violations)) :
+                                                        '{}';
 
     }
     const existingAccessibility = await getAccessibilityByUrl(url);

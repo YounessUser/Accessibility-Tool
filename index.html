@@ -358,6 +358,7 @@
                             let url = urls[i].trim();
                             let desktopRaport = JSON.parse(data['desktop'][url]['results']);
                             let mobileRaport = JSON.parse(data['mobile'][url]['results']);
+
                             if ($("#result table#wave_table tbody tr[data-url='" + url + "']").length > 0) {
 
                             } else {
