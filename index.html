@@ -140,7 +140,7 @@
                                 </th>
                                 <td class="px-6 py-4">
                                 <div class="flex flex-col justify-center">
-                                    <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-8 m-auto">
+                                    <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl h-20 w-20 text-center m-auto align-center pt-5">
                                     ` + data[i].lhDesktopScore + `
                                     </span>
                                     <section class="grid place-items-center py-2 px-0 ` + (data[i].lhDesktopViolations === '{}' ? 'hidden' : '' ) + `">
@@ -159,7 +159,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col justify-center">
-                                    <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-8 m-auto">
+                                    <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl h-20 w-20 text-center m-auto align-center pt-5">
                                     ` + data[i].lhMobileScore + `
                                     </span>
                                      <section class="grid place-items-center py-2 px-0 ` + (data[i].lhMobileViolations === '{}' ? 'hidden' : '' ) + `">
@@ -273,8 +273,8 @@
                                 // If the row already exists, update it
                                 $("#result table tbody tr[data-url='" + url + "'] .desktop-score").text(data['desktop'][url]['score']);
                                 $("#result table tbody tr[data-url='" + url + "'] .mobile-score").text(data['mobile'][url]['score']);
-                                $("#result table tbody tr[data-url='" + url + "'] .desktop-score").removeClass().addClass('inline-block rounded-full border-5 ' + desktopScoreColor + ' text-xl p-8 m-auto');
-                                $("#result table tbody tr[data-url='" + url + "'] .mobile-score").removeClass().addClass('inline-block rounded-full border-5 ' + mobileScoreColor + ' text-xl p-8 m-auto');
+                                $("#result table tbody tr[data-url='" + url + "'] .desktop-score").removeClass().addClass('inline-block rounded-full border-5 ' + desktopScoreColor + ' text-xl h-20 w-20 text-center m-auto align-center pt-5');
+                                $("#result table tbody tr[data-url='" + url + "'] .mobile-score").removeClass().addClass('inline-block rounded-full border-5 ' + mobileScoreColor + ' text-xl h-20 w-20 text-center m-auto align-center pt-5');
                             } else {
                                 // If the row does not exist, create a new one
                                 let dynamicRowHTML = `
@@ -284,7 +284,7 @@
                                     </th>
                                     <td class="px-6 py-4">
                                        <div class="flex flex-col justify-center">
-                                         <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl p-8 m-auto">
+                                         <span class="desktop-score inline-block rounded-full border-5 ` + desktopScoreColor + ` text-xl h-20 w-20 text-center m-auto align-center pt-5">
                                         ` + data['desktop'][url]['score'] + `
                                         </span>
                                         <section class="grid place-items-center py-2 px-0 ` + (data['desktop'][url]['violations'] === '{}' ? 'hidden' : '' ) + `">
@@ -303,7 +303,7 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-col justify-center">
-                                         <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl p-8 m-auto">
+                                         <span class="mobile-score inline-block rounded-full border-5 ` + mobileScoreColor + ` text-xl h-20 w-20 text-center m-auto align-center pt-5">
                                         ` + data['mobile'][url]['score'] + `
                                         </span>
                                         <section class="grid place-items-center py-2 px-0 ` + (data['mobile'][url]['violations'] === '{}' ? 'hidden' : '' ) + `">
